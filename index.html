@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>ADITYA BYPASS STUDIO - Roblox Audio Speed Engine</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
@@ -560,7 +561,7 @@
       <div class="bg-[#0c111b] border border-slate-800/90 rounded-2xl p-4 space-y-3.5">
         <div class="flex items-center justify-between">
           <span class="text-[11px] font-bold text-blue-400 tracking-widest uppercase">AUDIO TRIMMER / POTONG</span>
-          <span class="text-[10px] font-mono-tech text-emerald-400">WAV LOSSLESS</span>
+          <span class="text-[10px] font-mono-tech text-emerald-400">SESUAI FORMAT ASLI</span>
         </div>
 
         <p class="text-xs text-slate-400">Upload file audio di tab <strong>Tools</strong> terlebih dahulu, lalu tentukan detik mulai dan selesai pemotongan di bawah ini.</p>
@@ -1223,11 +1224,13 @@
         source.start(0);
 
         const renderedBuffer = await offlineCtx.startRendering();
-        const wavBlob = audioBufferToWav(renderedBuffer);
+        const extMatch = state.fileName.match(/\.([^/.]+)$/);
+        const origExt = extMatch ? extMatch[1].toLowerCase() : 'wav';
+        const { blob: outBlob, ext: finalExt } = await encodeAudioMatchFormat(renderedBuffer, origExt);
 
         const cleanName = state.fileName.replace(/\.[^/.]+$/, '');
-        const outName = `${cleanName}_BYPASS_${speed}x_${state.db}dB.wav`;
-        triggerDownload(wavBlob, outName);
+        const outName = `${cleanName}_BYPASS_${speed}x_${state.db}dB.${finalExt}`;
+        triggerDownload(outBlob, outName);
 
         if (max !== Infinity) {
           state.usedToday += 1;
@@ -1238,8 +1241,9 @@
         updateUIByRole();
 
         addToHistory(outName, speed, state.db);
-        showToast('Berhasil! File audio bypass terunduh.');
+        showToast(`Berhasil! File audio (.${finalExt.toUpperCase()}) terunduh.`);
       } catch (err) {
+        console.error(err);
         showToast('Terjadi kesalahan saat merender audio.');
       } finally {
         btn.disabled = false;
@@ -1272,10 +1276,109 @@
         }
       }
 
-      const wavBlob = audioBufferToWav(newBuffer);
+      const extMatch = state.fileName.match(/\.([^/.]+)$/);
+      const origExt = extMatch ? extMatch[1].toLowerCase() : 'wav';
+      const { blob: outBlob, ext: finalExt } = await encodeAudioMatchFormat(newBuffer, origExt);
       const cleanName = state.fileName.replace(/\.[^/.]+$/, '');
-      triggerDownload(wavBlob, `${cleanName}_TRIM_${startSec}s-${endSec}s.wav`);
-      showToast('Audio berhasil dipotong & diunduh!');
+      triggerDownload(outBlob, `${cleanName}_TRIM_${startSec}s-${endSec}s.${finalExt}`);
+      showToast(`Audio berhasil dipotong & diunduh (.${finalExt.toUpperCase()})!`);
+    }
+
+    async function encodeAudioMatchFormat(buffer, origExt) {
+      const ext = (origExt || 'wav').toLowerCase();
+
+      // 1. Jika input MP3 -> encode sungguhan ke MP3 (320kbps) via lamejs
+      if (ext === 'mp3' && typeof lamejs !== 'undefined') {
+        const mp3Blob = audioBufferToMp3(buffer, 320);
+        return { blob: mp3Blob, ext: 'mp3' };
+      }
+
+      // 2. Jika input OGG / WEBM / M4A -> rekam via MediaRecorder jika didukung browser
+      const mimeMap = {
+        ogg: 'audio/ogg;codecs=opus',
+        webm: 'audio/webm;codecs=opus',
+        m4a: 'audio/mp4',
+        mp4: 'audio/mp4'
+      };
+      if (mimeMap[ext] && typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(mimeMap[ext])) {
+        try {
+          const recordedBlob = await audioBufferToMediaRecorder(buffer, mimeMap[ext]);
+          return { blob: recordedBlob, ext };
+        } catch (e) {
+          console.warn('Fallback ke WAV:', e);
+        }
+      }
+
+      // 3. Jika input WAV (atau fallback format browser) -> WAV lossless dengan ekstensi asli
+      const wavBlob = audioBufferToWav(buffer);
+      return { blob: wavBlob, ext: ext === 'wav' ? 'wav' : ext };
+    }
+
+    function audioBufferToMp3(buffer, kbps = 320) {
+      const channels = Math.min(2, buffer.numberOfChannels);
+      const sampleRate = buffer.sampleRate;
+      const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, kbps);
+      const mp3Data = [];
+
+      const leftFloat = buffer.getChannelData(0);
+      const rightFloat = channels > 1 ? buffer.getChannelData(1) : leftFloat;
+
+      const floatTo16Bit = (floatArr) => {
+        const int16 = new Int16Array(floatArr.length);
+        for (let i = 0; i < floatArr.length; i++) {
+          const s = Math.max(-1, Math.min(1, floatArr[i]));
+          int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+        }
+        return int16;
+      };
+
+      const left = floatTo16Bit(leftFloat);
+      const right = floatTo16Bit(rightFloat);
+      const blockSize = 1152;
+
+      for (let i = 0; i < left.length; i += blockSize) {
+        const leftChunk = left.subarray(i, i + blockSize);
+        const rightChunk = right.subarray(i, i + blockSize);
+        const mp3buf = channels === 1
+          ? mp3encoder.encodeBuffer(leftChunk)
+          : mp3encoder.encodeBuffer(leftChunk, rightChunk);
+        if (mp3buf.length > 0) mp3Data.push(mp3buf);
+      }
+
+      const flushBuf = mp3encoder.flush();
+      if (flushBuf.length > 0) mp3Data.push(flushBuf);
+
+      return new Blob(mp3Data, { type: 'audio/mp3' });
+    }
+
+    function audioBufferToMediaRecorder(buffer, mimeType) {
+      return new Promise((resolve, reject) => {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: buffer.sampleRate });
+        const dest = ctx.createMediaStreamDestination();
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(dest);
+
+        const chunks = [];
+        const recorder = new MediaRecorder(dest.stream, { mimeType });
+        recorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+        recorder.onstop = () => {
+          ctx.close();
+          resolve(new Blob(chunks, { type: mimeType }));
+        };
+        recorder.onerror = (err) => {
+          ctx.close();
+          reject(err);
+        };
+
+        recorder.start();
+        source.start(0);
+        source.onended = () => {
+          setTimeout(() => {
+            if (recorder.state !== 'inactive') recorder.stop();
+          }, 80);
+        };
+      });
     }
 
     function audioBufferToWav(buffer) {
