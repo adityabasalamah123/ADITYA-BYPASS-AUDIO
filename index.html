@@ -1,337 +1,12 @@
 
-<!DOCTYPE html>
-<html lang="id" class="dark">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ADITYA BYPASS STUDIO - Roblox Audio Speed Engine</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --bg-base: #07080a;
-      --bg-card: #0e1014;
-      --bg-card-hover: #161920;
-      --border-subtle: #272b35;
-      --accent-silver: #cbd5e1;
-      --accent-gold: #f59e0b;
-      --discord-blurple: #5865F2;
-    }
-
-    body {
-      background-color: var(--bg-base);
-      color: #f8fafc;
-      font-family: 'Inter', sans-serif;
-      background-image: 
-        linear-gradient(to right, rgba(30, 41, 59, 0.25) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(30, 41, 59, 0.25) 1px, transparent 1px);
-      background-size: 28px 28px;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .font-mono-tech {
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    input[type=range] {
-      -webkit-appearance: none;
-      background: transparent;
-    }
-    input[type=range]::-webkit-slider-runnable-track {
-      height: 6px;
-      border-radius: 999px;
-      background: #1e293b;
-    }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      height: 18px;
-      width: 18px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 55%, #94a3b8 100%);
-      border: 2px solid #e2e8f0;
-      margin-top: -6px;
-      cursor: pointer;
-      box-shadow: 0 0 10px rgba(203, 213, 225, 0.45);
-      transition: transform 0.15s ease;
-    }
-    input[type=range]::-webkit-slider-thumb:active {
-      transform: scale(1.15);
-    }
-
-    ::-webkit-scrollbar {
-      width: 5px;
-      height: 5px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #06090f;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #1e293b;
-      border-radius: 999px;
-    }
-  </style>
-</head>
-<body class="min-h-screen flex flex-col items-center pb-12 selection:bg-slate-400 selection:text-slate-950 selection:text-white">
-
-  <!-- ==================== DISCORD AUTH GATE SCREEN (WAJIB LOGIN) ==================== -->
-  <div id="authGateScreen" class="fixed inset-0 z-50 bg-[#06090f]/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-    <div class="w-full max-w-[420px] bg-[#0c111b] border border-slate-800 rounded-3xl p-6 space-y-5 shadow-2xl my-auto">
-      
-      <!-- Logo & Title -->
-      <div class="flex flex-col items-center text-center space-y-2">
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500 flex items-center justify-center font-extrabold text-slate-950 text-2xl shadow-[0_0_25px_rgba(203,213,225,0.35)]">
-          A
-        </div>
-        <div>
-          <h1 class="text-lg font-extrabold tracking-tight text-white">ADITYA <span class="text-slate-300">BYPASS</span> STUDIO</h1>
-          <p class="text-[11px] font-mono-tech text-slate-400 mt-0.5">ROBLOX AUDIO SPEED ENGINE V4.0</p>
-        </div>
-      </div>
-
-      <!-- Step 1: Login Discord -->
-      <div class="bg-[#080c14] border border-slate-800/90 rounded-2xl p-4 space-y-3">
-        <div class="flex items-center justify-between">
-          <span class="text-[11px] font-bold text-[#5865F2] tracking-wider uppercase">LANGKAH 1 · LOGIN DISCORD</span>
-          <span id="gateStep1Badge" class="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-slate-800 text-slate-400">BELUM LOGIN</span>
-        </div>
-
-        <div id="discordLoginForm" class="space-y-2.5">
-          <input type="text" id="discordUsernameInput" placeholder="Masukkan Username Discord..." class="w-full bg-[#0c111b] border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#5865F2]" />
-          <button onclick="loginWithDiscord()" class="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 transition shadow-lg">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-            <span>Lanjutkan dengan Discord</span>
-          </button>
-        </div>
-
-        <div id="discordLoggedInInfo" class="hidden flex items-center justify-between bg-[#0f172a] border border-emerald-500/30 rounded-xl p-2.5">
-          <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-full bg-[#5865F2] flex items-center justify-center text-white font-bold text-xs">D</div>
-            <div>
-              <div id="gateDiscordName" class="text-xs font-bold text-white">@user</div>
-              <div class="text-[10px] text-emerald-400">Terhubung ke Discord OAuth</div>
-            </div>
-          </div>
-          <button onclick="resetDiscordLogin()" class="text-[10px] text-rose-400 underline">Ganti</button>
-        </div>
-      </div>
-
-      <!-- Step 2: Join & Verifikasi Server Discord -->
-      <div class="bg-[#080c14] border border-slate-800/90 rounded-2xl p-4 space-y-3">
-        <div class="flex items-center justify-between">
-          <span class="text-[11px] font-bold text-slate-300 tracking-wider uppercase">LANGKAH 2 · JOIN SERVER</span>
-          <span id="gateStep2Badge" class="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-rose-500/15 text-rose-400">WAJIB JOIN</span>
-        </div>
-
-        <p class="text-[11px] text-slate-400 leading-relaxed">
-          Gabung ke server Discord resmi <strong>Aditya Bypass Community</strong> untuk membuka limit gratis <strong>4x/hari</strong> atau akses <strong>VIP/VVIP</strong>.
-        </p>
-
-        <div class="grid grid-cols-2 gap-2">
-          <button onclick="openDiscordInvite()" class="bg-[#191c24] hover:bg-[#222631] border border-slate-400/40 text-slate-200 font-bold text-xs py-2.5 rounded-xl transition">
-            Buka Server Discord
-          </button>
-          <button onclick="verifyDiscordServer()" id="verifyDiscordBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2.5 rounded-xl transition">
-            Cek Status Join
-          </button>
-        </div>
-      </div>
-
-      <!-- Enter App Button -->
-      <button id="enterStudioBtn" onclick="enterStudio()" disabled class="w-full bg-slate-800 text-slate-500 font-extrabold text-xs py-3.5 rounded-xl transition cursor-not-allowed">
-        Masuk ke Aditya Bypass Studio
-      </button>
-
-      <!-- Quick Owner Bypass Login -->
-      <div class="pt-1 border-t border-slate-800/80 flex items-center justify-between">
-        <span class="text-[10px] text-slate-500">Owner / Admin Access?</span>
-        <button onclick="openOwnerPinModal()" class="text-[11px] font-bold text-amber-400 hover:underline">👑 Login Owner Unlimited</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== TOP NAVIGATION BAR ==================== -->
-  <header class="w-full max-w-[460px] sticky top-0 z-40 bg-[#06090f]/90 backdrop-blur-md border-b border-slate-800/80 px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-2.5">
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500 flex items-center justify-center font-extrabold text-slate-950 text-base shadow-[0_0_15px_rgba(203,213,225,0.3)]">
-        A
-      </div>
-      <div>
-        <div class="flex items-center gap-1.5 leading-none">
-          <span class="font-extrabold tracking-tight text-sm text-white">ADITYA</span>
-          <span class="font-extrabold tracking-tight text-sm text-slate-300">BYPASS</span>
-          <span class="font-extrabold tracking-tight text-sm text-white">STUDIO</span>
-        </div>
-        <span class="text-[9px] font-mono-tech text-slate-400 tracking-wider">ROBLOX AUDIO SPEED ENGINE V4.0</span>
-      </div>
-    </div>
-
-    <!-- User Profile Pill -->
-    <button onclick="openRoleModal()" class="flex items-center gap-2 bg-[#0f1623] hover:bg-[#162033] border border-amber-500/40 rounded-full pl-1.5 pr-3 py-1 transition">
-      <div id="headerAvatar" class="w-6 h-6 rounded-full bg-slate-200 text-slate-950 flex items-center justify-center text-[11px] font-bold text-white">
-        A
-      </div>
-      <span id="headerUsername" class="text-xs font-semibold text-slate-200 max-w-[105px] truncate">@adtyekaprtma</span>
-    </button>
-  </header>
-
-  <!-- ==================== MAIN MOBILE CONTAINER ==================== -->
-  <main class="w-full max-w-[460px] px-4 pt-3 space-y-3.5">
-
-    <!-- EVENT BANNER -->
-    <div class="bg-gradient-to-r from-[#111318] via-[#1a1d24] to-[#111318] border border-slate-400/30 rounded-2xl p-3.5 flex items-center justify-between shadow-lg">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-slate-300/10 border border-slate-300/25 flex items-center justify-center text-xl">
-          📅
-        </div>
-        <div>
-          <div class="flex items-center gap-1.5">
-            <span class="text-xs font-extrabold tracking-wide text-slate-200 uppercase">EVENT 10× FREE / HARI</span>
-          </div>
-          <p class="text-[11px] text-slate-400 mt-0.5">Periode event · 1 Desember – 10 Desember</p>
-        </div>
-      </div>
-      <div class="bg-[#090b0f] border border-slate-600/80 rounded-xl px-2.5 py-1.5 text-center">
-        <span id="eventBadge" class="text-xs font-mono-tech font-bold text-slate-200">1–10 Des</span>
-      </div>
-    </div>
-
-    <!-- STATS GRID (4 CARDS - SEMUA MULAI DARI 0) -->
-    <div class="grid grid-cols-4 gap-2">
-      <div class="bg-[#0c111b] border border-slate-800/90 rounded-xl p-2.5">
-        <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">USERS</div>
-        <div id="statUsers" class="text-base font-extrabold text-slate-300 font-mono-tech mt-0.5">0</div>
-        <div class="text-[9px] text-slate-500 mt-0.5">TOTAL</div>
-      </div>
-      <div class="bg-[#0c111b] border border-slate-800/90 rounded-xl p-2.5">
-        <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">PREMIUM</div>
-        <div id="statPremium" class="text-base font-extrabold text-slate-300 font-mono-tech mt-0.5">0</div>
-        <div class="text-[9px] text-slate-500 mt-0.5">AKTIF</div>
-      </div>
-      <div class="bg-[#0c111b] border border-slate-800/90 rounded-xl p-2.5">
-        <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">ONLINE</div>
-        <div id="statOnline" class="text-base font-extrabold text-slate-300 font-mono-tech mt-0.5">0</div>
-        <div class="text-[9px] text-slate-500 mt-0.5">SEKARANG</div>
-      </div>
-      <div class="bg-[#0c111b] border border-slate-800/90 rounded-xl p-2.5">
-        <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">MUSIK</div>
-        <div id="statMusik" class="text-base font-extrabold text-slate-300 font-mono-tech mt-0.5">0</div>
-        <div class="text-[9px] text-slate-500 mt-0.5">KOMPRES</div>
-      </div>
-    </div>
-
-    <!-- PLAN STATUS BAR -->
-    <div class="bg-[#0c111b] border border-slate-800/90 rounded-xl px-3.5 py-2.5 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">PLAN</span>
-        <span id="topPlanBadge" class="text-xs font-extrabold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded uppercase tracking-wide">OWNER UNLIMITED</span>
-      </div>
-      <span id="topQuotaText" class="text-[11px] font-mono-tech text-slate-300 font-semibold">∞ · DISCORD</span>
-    </div>
-
-    <!-- MAIN TABS (TOOLS / TOKO / POTONG) -->
-    <div class="grid grid-cols-3 bg-[#0c111b] border border-slate-800/90 rounded-2xl p-1 gap-1">
-      <button onclick="switchTab('tools')" id="tab-tools" class="flex flex-col items-center justify-center py-2.5 rounded-xl bg-[#191c24] border border-slate-400/40 text-slate-300 transition">
-        <svg class="w-4 h-4 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-        <span class="text-xs font-bold">Tools</span>
-      </button>
-      <button onclick="switchTab('toko')" id="tab-toko" class="flex flex-col items-center justify-center py-2.5 rounded-xl text-slate-400 hover:text-slate-200 transition">
-        <svg class="w-4 h-4 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-        <span class="text-xs font-bold">Toko</span>
-      </button>
-      <button onclick="switchTab('potong')" id="tab-potong" class="flex flex-col items-center justify-center py-2.5 rounded-xl text-slate-400 hover:text-slate-200 transition">
-        <svg class="w-4 h-4 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"/></svg>
-        <span class="text-xs font-bold">Potong</span>
-      </button>
-    </div>
-
-    <!-- ==================== VIEW 1: TOOLS ==================== -->
-    <div id="view-tools" class="space-y-3.5">
-      
-      <!-- ACCOUNT CARD -->
-      <div class="bg-[#0c111b] border border-slate-800/90 rounded-2xl p-4 space-y-2.5">
-        <div class="flex items-center justify-between">
-          <span class="text-[11px] font-bold text-slate-300 tracking-widest uppercase">ACCOUNT</span>
-          <span id="roleBadgeTag" class="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 font-bold">OWNER PRIVILEGE</span>
-        </div>
-
-        <div class="w-full bg-[#080c14] border border-slate-800/90 rounded-xl py-2.5 px-3.5 flex items-center justify-between">
-          <span class="text-xs text-slate-400">Login:</span>
-          <span id="accountLoginText" class="text-xs font-mono-tech text-white font-bold">adtyekaprtma</span>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <button onclick="openRedeemModal()" class="bg-[#111827] hover:bg-[#1a2438] border border-slate-700/80 rounded-xl py-2.5 text-xs font-bold text-white transition">
-            🎫 Redeem / Gen Key
-          </button>
-          <button onclick="openRoleModal()" class="bg-[#1a140c] hover:bg-[#261d11] border border-amber-500/30 rounded-xl py-2.5 text-xs font-bold text-amber-400 transition">
-            👤 Switch Role
-          </button>
-        </div>
-
-        <!-- Discord Verification Status Box -->
-        <div class="w-full bg-[#080c14] border border-slate-800/90 rounded-xl py-2.5 px-3.5 flex items-center justify-between text-xs">
-          <span id="discordStatusText" class="text-slate-300 font-semibold">✓ Sudah join Discord</span>
-          <span id="discordLimitSub" class="text-amber-400 font-bold">Owner Unlimited</span>
-        </div>
-
-        <button onclick="openDiscordInvite()" class="w-full bg-[#111827] hover:bg-[#1a2438] border border-slate-700/80 rounded-xl py-2.5 text-xs font-bold text-white transition">
-          Buka Server Discord
-        </button>
-
-        <button onclick="recheckDiscordStatus()" class="w-full bg-[#111827] hover:bg-[#1a2438] border border-slate-700/80 rounded-xl py-2.5 text-xs font-bold text-white transition">
-          Cek ulang status Discord
-        </button>
-      </div>
-
-      <!-- EDITOR CARD -->
-      <div class="bg-[#0c111b] border border-slate-800/90 rounded-2xl p-4 space-y-4">
-        <div class="flex items-center justify-between">
-          <span class="text-[11px] font-bold text-slate-300 tracking-widest uppercase">EDITOR</span>
-          <span class="text-[10px] font-mono-tech text-slate-400">WebAudio 48kHz</span>
-        </div>
-
-        <!-- Daily Limit & Plan Status -->
-        <div class="space-y-2">
-          <div class="bg-[#080c14] border border-slate-800/90 rounded-xl px-3.5 py-2.5 flex items-center justify-between">
-            <span class="text-xs font-semibold text-slate-300">Daily Limit</span>
-            <span id="editorLimitText" class="text-xs font-mono-tech font-bold text-emerald-400">∞ / ∞</span>
-          </div>
-          <div class="bg-[#080c14] border border-slate-800/90 rounded-xl px-3.5 py-2.5 flex items-center justify-between">
-            <span class="text-xs font-semibold text-slate-300">Plan Status</span>
-            <span id="editorPlanStatus" class="text-xs font-mono-tech font-bold text-amber-400">Owner Unlimited</span>
-          </div>
-        </div>
-
-        <!-- MODE PROSES -->
-        <div class="space-y-2">
-          <div class="text-[11px] font-bold text-slate-300 tracking-widest uppercase">MODE PROSES</div>
-          <div class="grid grid-cols-3 gap-2">
-            <button onclick="selectMode('bypass')" id="mode-bypass" class="bg-[#1a1d26] border border-slate-300 rounded-xl p-2.5 text-center transition">
-              <div class="text-xs font-extrabold text-slate-300">Bypass</div>
-              <div class="text-[10px] text-slate-400 mt-1 leading-tight">3x · -6dB<br>Tanpa pitch · Free</div>
-            </button>
-            <button onclick="selectMode('manual')" id="mode-manual" class="bg-[#080c14] border border-slate-800 hover:border-slate-700 rounded-xl p-2.5 text-center transition">
-              <div class="text-xs font-extrabold text-slate-200">Manual</div>
-              <div class="text-[10px] text-slate-400 mt-1 leading-tight">Atur sendiri<br>speed / dB</div>
-            </button>
-            <button onclick="selectMode('clean')" id="mode-clean" class="bg-[#080c14] border border-slate-800 hover:border-slate-700 rounded-xl p-2.5 text-center transition">
-              <div class="text-xs font-extrabold text-slate-200">Clean Only</div>
-              <div class="text-[10px] text-slate-400 mt-1 leading-tight">Rapikan ulang<br>file sudah edit</div>
-            </button>
-          </div>
-          <div id="modeDescription" class="bg-[#080c14] border border-slate-800/80 rounded-xl p-2.5 text-[11px] text-slate-400 leading-relaxed">
-            <span class="text-slate-300 font-bold">Bypass</span> · edit baru (3x). <span class="text-slate-300 font-bold">Clean</span> · rapikan file yang sudah pernah di-edit (1x, lebih bersih). <span class="text-slate-300 font-bold">Manual</span> · atur 
-
-
 Ikon HTML
-index-silver-event
+index-aditya-audio-bypass
 <!DOCTYPE html>
 <html lang="id" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ADITYA BYPASS STUDIO - Roblox Audio Speed Engine</title>
+  <title>Aditya audio bypass</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -485,20 +160,17 @@ index-silver-event
       </div>
       <div>
         <div class="flex items-center gap-1.5 leading-none">
-          <span class="font-extrabold tracking-tight text-sm text-white">ADITYA</span>
-          <span class="font-extrabold tracking-tight text-sm text-slate-300">BYPASS</span>
-          <span class="font-extrabold tracking-tight text-sm text-white">STUDIO</span>
+          <span class="font-extrabold tracking-tight text-sm text-white">Aditya audio bypass</span>
         </div>
-        <span class="text-[9px] font-mono-tech text-slate-400 tracking-wider">ROBLOX AUDIO SPEED ENGINE V4.0</span>
       </div>
     </div>
 
-    <!-- User Profile Pill -->
-    <button onclick="openRoleModal()" class="flex items-center gap-2 bg-[#0f1623] hover:bg-[#162033] border border-amber-500/40 rounded-full pl-1.5 pr-3 py-1 transition">
-      <div id="headerAvatar" class="w-6 h-6 rounded-full bg-slate-200 text-slate-950 flex items-center justify-center text-[11px] font-bold text-white">
+    <!-- Menu / Role Pill (Tanpa Nama User) -->
+    <button onclick="openRoleModal()" class="flex items-center gap-1.5 bg-[#0f1623] hover:bg-[#162033] border border-amber-500/40 rounded-full pl-1.5 pr-2.5 py-1 transition">
+      <div id="headerAvatar" class="w-6 h-6 rounded-full bg-slate-200 text-slate-950 flex items-center justify-center text-[11px] font-bold">
         A
       </div>
-      <span id="headerUsername" class="text-xs font-semibold text-slate-200 max-w-[105px] truncate">@adtyekaprtma</span>
+      <span class="text-[11px] font-semibold text-slate-200">Menu</span>
     </button>
   </header>
 
@@ -583,8 +255,8 @@ index-silver-event
         </div>
 
         <div class="w-full bg-[#080c14] border border-slate-800/90 rounded-xl py-2.5 px-3.5 flex items-center justify-between">
-          <span class="text-xs text-slate-400">Login:</span>
-          <span id="accountLoginText" class="text-xs font-mono-tech text-white font-bold">adtyekaprtma</span>
+          <span class="text-xs text-slate-400">Akses:</span>
+          <span id="accountLoginText" class="text-xs font-mono-tech text-white font-bold">Terverifikasi</span>
         </div>
 
         <div class="grid grid-cols-2 gap-2">
@@ -648,4 +320,10 @@ index-silver-event
             </button>
           </div>
           <div id="modeDescription" class="bg-[#080c14] border border-slate-800/80 rounded-xl p-2.5 text-[11px] text-slate-400 leading-relaxed">
-            <span class="text-slate-300 font-bold">Bypass</span> · edit baru (3x). <span class="text-slate-300 font-bold">Clean</span> · rapikan file yang sudah pernah di-edit (1x, lebih bersih). <span class="text-slate-300 font-bold">Manual</span> · atur 
+            <span class="text-slate-300 font-bold">Bypass</span> · edit baru (3x). <span class="text-slate-300 font-bold">Clean</span> · rapikan file yang sudah pernah di-edit (1x, lebih bersih). <span class="text-slate-300 font-bold">Manual</span> · atur sendiri.
+          </div>
+        </div>
+
+        <!-- SOURCE TABS (UPLOAD / DARI LINK) -->
+        <div class="grid grid-cols-2 bg-[#080c14] border border-slate-800 rounded-xl p-1">
+          <button onclick="switchSource('upload')" id="src-upload" class="py-2 rounded-lg bg-[#191c24] border border-slate-400/40 text-xs font-bold text-slate-
