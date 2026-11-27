@@ -553,35 +553,107 @@
 
     </div>
 
-    <!-- ==================== VIEW 3: POTONG (AUDIO TRIMMER) ==================== -->
+    <!-- ==================== VIEW 3: POTONG (AUDIO TRIMMER & MULTI-PART SPLITTER) ==================== -->
     <div id="view-potong" class="hidden space-y-3.5">
       <div class="bg-[#0c111b] border border-slate-800/90 rounded-2xl p-4 space-y-3.5">
         <div class="flex items-center justify-between">
-          <span class="text-[11px] font-bold text-slate-300 tracking-widest uppercase">AUDIO TRIMMER / POTONG</span>
-          <span class="text-[10px] font-mono-tech text-emerald-400">SESUAI FORMAT ASLI</span>
+          <span class="text-[11px] font-bold text-slate-300 tracking-widest uppercase">AUDIO TRIMMER & SPLIT SET</span>
+          <span class="text-[10px] font-mono-tech text-emerald-400">SUPPORT DURASI 1 JAM+</span>
         </div>
 
-        <p class="text-xs text-slate-400">Upload file audio di tab <strong>Tools</strong> terlebih dahulu, lalu tentukan detik mulai dan selesai pemotongan di bawah ini.</p>
+        <p class="text-xs text-slate-400">Upload file audio (termasuk set DJ panjang 1 jam) di tab <strong>Tools</strong>, lalu pilih potong manual atau bagi otomatis menjadi beberapa bagian.</p>
 
-        <div class="bg-[#080c14] border border-slate-800 rounded-xl p-3 flex items-center justify-between">
-          <span class="text-xs text-slate-400">File Aktif:</span>
-          <span id="trimFileName" class="text-xs font-bold text-slate-300 truncate max-w-[200px]">Belum ada file</span>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="text-[11px] font-bold text-slate-300 block mb-1">Mulai (Detik)</label>
-            <input type="number" id="trimStartInput" min="0" step="0.1" value="0" class="w-full bg-[#080c14] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono-tech text-white" />
+        <div class="bg-[#080c14] border border-slate-800 rounded-xl p-3 space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400">File Aktif:</span>
+            <span id="trimFileName" class="text-xs font-bold text-slate-300 truncate max-w-[200px]">Belum ada file</span>
           </div>
-          <div>
-            <label class="text-[11px] font-bold text-slate-300 block mb-1">Selesai (Detik)</label>
-            <input type="number" id="trimEndInput" min="1" step="0.1" value="15" class="w-full bg-[#080c14] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono-tech text-white" />
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] text-slate-500">Total Durasi:</span>
+            <span id="trimTotalDuration" class="text-[11px] font-mono-tech font-bold text-emerald-400">0:00 (0 detik)</span>
           </div>
         </div>
 
-        <button onclick="trimAndDownloadAudio()" class="w-full bg-slate-200 hover:bg-white text-slate-950 font-extrabold text-xs py-3 rounded-xl transition">
-          Potong & Download Hasil
-        </button>
+        <!-- MODE POTONG TABS -->
+        <div class="grid grid-cols-2 bg-[#080c14] border border-slate-800 rounded-xl p-1">
+          <button type="button" onclick="switchTrimMode('split')" id="trimTab-split" class="py-2 rounded-lg bg-[#191c24] border border-slate-400/40 text-xs font-bold text-slate-200 transition">Bagi Jadi Beberapa Part</button>
+          <button type="button" onclick="switchTrimMode('manual')" id="trimTab-manual" class="py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-slate-200 transition">Potong Manual</button>
+        </div>
+
+        <!-- PANEL 1: AUTO SPLIT JADI 2, 4, ATAU N BAGIAN -->
+        <div id="trimPanel-split" class="space-y-3">
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-slate-300 block">Pilih Jumlah Bagian (Part / Set)</label>
+            <div class="grid grid-cols-4 gap-2">
+              <button type="button" onclick="setSplitParts(2)" class="split-preset bg-[#080c14] border border-slate-800 hover:border-slate-400 rounded-xl py-2 text-xs font-mono-tech font-bold text-slate-200">2 Part</button>
+              <button type="button" onclick="setSplitParts(4)" class="split-preset bg-[#1a1d26] border border-slate-300 rounded-xl py-2 text-xs font-mono-tech font-bold text-slate-200">4 Part</button>
+              <button type="button" onclick="setSplitParts(6)" class="split-preset bg-[#080c14] border border-slate-800 hover:border-slate-400 rounded-xl py-2 text-xs font-mono-tech font-bold text-slate-200">6 Part</button>
+              <button type="button" onclick="setSplitParts(8)" class="split-preset bg-[#080c14] border border-slate-800 hover:border-slate-400 rounded-xl py-2 text-xs font-mono-tech font-bold text-slate-200">8 Part</button>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <div class="flex-1">
+              <label class="text-[10px] font-bold text-slate-400 block mb-1">Atau Isi Jumlah Part Sendiri (2 – 20)</label>
+              <input type="number" id="splitCountInput" min="2" max="20" value="4" oninput="previewSplitParts()" class="w-full bg-[#080c14] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono-tech text-white" />
+            </div>
+            <div class="pt-4">
+              <button type="button" onclick="previewSplitParts()" class="bg-[#191c24] hover:bg-[#222631] border border-slate-500/40 text-slate-200 font-bold text-xs px-3.5 py-2 rounded-xl transition">
+                Hitung Part
+              </button>
+            </div>
+          </div>
+
+          <!-- DAFTAR HASIL PEMBAGIAN PART -->
+          <div id="splitPartsList" class="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+            <div class="bg-[#080c14] border border-slate-800/80 rounded-xl p-3 text-center text-[11px] text-slate-500">
+              Upload audio untuk melihat rincian pembagian part.
+            </div>
+          </div>
+
+          <button type="button" id="downloadAllPartsBtn" onclick="downloadAllSplitParts()" class="w-full bg-gradient-to-r from-slate-100 via-slate-300 to-slate-400 hover:from-white hover:via-slate-200 hover:to-slate-300 text-slate-950 font-extrabold text-xs py-3 rounded-xl transition shadow-lg">
+            Download Semua Bagian Sekaligus
+          </button>
+        </div>
+
+        <!-- PANEL 2: POTONG MANUAL (SATU RENTANG & MULTI-SET CUSTOM) -->
+        <div id="trimPanel-manual" class="hidden space-y-3.5">
+          <div class="bg-[#080c14] border border-slate-800/90 rounded-xl p-3 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-slate-200 uppercase tracking-wider">Potong 1 Rentang Cepat</span>
+              <span class="text-[10px] font-mono-tech text-slate-400">DETIK</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="text-[11px] font-bold text-slate-300 block mb-1">Mulai (Detik)</label>
+                <input type="number" id="trimStartInput" min="0" step="0.1" value="0" class="w-full bg-[#0c111b] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono-tech text-white" />
+              </div>
+              <div>
+                <label class="text-[11px] font-bold text-slate-300 block mb-1">Selesai (Detik)</label>
+                <input type="number" id="trimEndInput" min="1" step="0.1" value="15" class="w-full bg-[#0c111b] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono-tech text-white" />
+              </div>
+            </div>
+            <button type="button" id="manualTrimBtn" onclick="trimAndDownloadAudio()" class="w-full bg-slate-200 hover:bg-white text-slate-950 font-extrabold text-xs py-2.5 rounded-xl transition">
+              Potong & Download 1 Rentang
+            </button>
+          </div>
+
+          <div class="bg-[#080c14] border border-slate-800/90 rounded-xl p-3 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-amber-300 uppercase tracking-wider">Manual Multi-Set (Atur Sendiri)</span>
+              <button type="button" onclick="addManualSetRow()" class="bg-[#191c24] hover:bg-[#222631] border border-slate-500/40 text-slate-200 font-bold text-[10px] px-2.5 py-1 rounded-lg transition">
+                + Tambah Set
+              </button>
+            </div>
+            <p class="text-[10px] text-slate-400 leading-relaxed">
+              Isi titik mulai dan selesai tiap set secara manual (format detik, misal 0 – 900 untuk 15 menit pertama, lalu 900 – 1800 untuk set berikutnya).
+            </p>
+            <div id="manualSetsContainer" class="space-y-2 max-h-[260px] overflow-y-auto pr-1"></div>
+            <button type="button" id="downloadManualSetsBtn" onclick="downloadAllManualSets()" class="w-full bg-gradient-to-r from-slate-100 via-slate-300 to-slate-400 hover:from-white hover:via-slate-200 hover:to-slate-300 text-slate-950 font-extrabold text-xs py-3 rounded-xl transition shadow-lg">
+              Download Semua Set Manual
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -706,6 +778,7 @@
       updateUIByRole();
       updateSliders();
       renderHistory();
+      initManualSetsDefault();
     });
 
     function saveState() {
@@ -1081,7 +1154,9 @@
         const dur = state.audioBuffer.duration;
         document.getElementById('durationTimeText').textContent = formatTime(dur);
         document.getElementById('trimEndInput').value = Math.min(15, dur).toFixed(1);
+        document.getElementById('trimTotalDuration').textContent = `${formatTime(dur)} (${dur.toFixed(1)} detik)`;
         document.getElementById('previewSubtitle').textContent = `Durasi Asli: ${formatTime(dur)} · Siap Bypass`;
+        previewSplitParts();
 
         const playBtn = document.getElementById('playPauseBtn');
         playBtn.disabled = false;
@@ -1250,6 +1325,119 @@
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<span>Konversi & Download Audio</span>';
+      }
+    }
+
+    let manualSetRows = [];
+
+    function initManualSetsDefault() {
+      if (manualSetRows.length > 0) return;
+      manualSetRows = [
+        { id: 1, label: 'Set 1', start: 0, end: 600 },
+        { id: 2, label: 'Set 2', start: 600, end: 1200 }
+      ];
+      renderManualSets();
+    }
+
+    function renderManualSets() {
+      const container = document.getElementById('manualSetsContainer');
+      if (!container) return;
+      container.innerHTML = manualSetRows.map((row, idx) => `
+        <div class="bg-[#0c111b] border border-slate-800 rounded-xl p-2.5 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <input type="text" value="${row.label}" onchange="updateManualSetField(${idx}, 'label', this.value)" class="bg-[#080c14] border border-slate-700 rounded-lg px-2 py-1 text-[11px] font-bold text-slate-200 w-24" />
+            <div class="flex items-center gap-1.5">
+              <button type="button" id="manualSetBtn-${idx}" onclick="downloadSingleManualSet(${idx})" class="bg-slate-200 hover:bg-white text-slate-950 font-bold text-[10px] px-2.5 py-1 rounded-lg transition">
+                Unduh
+              </button>
+              ${manualSetRows.length > 1 ? `<button type="button" onclick="removeManualSetRow(${idx})" class="bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold text-[10px] px-2 py-1 rounded-lg transition">✕</button>` : ''}
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <span class="text-[10px] text-slate-400 block mb-0.5">Mulai (dtk)</span>
+              <input type="number" min="0" step="0.1" value="${row.start}" onchange="updateManualSetField(${idx}, 'start', parseFloat(this.value) || 0)" class="w-full bg-[#080c14] border border-slate-700 rounded-lg px-2.5 py-1.5 text-[11px] font-mono-tech text-white" />
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 block mb-0.5">Selesai (dtk)</span>
+              <input type="number" min="0.1" step="0.1" value="${row.end}" onchange="updateManualSetField(${idx}, 'end', parseFloat(this.value) || 0)" class="w-full bg-[#080c14] border border-slate-700 rounded-lg px-2.5 py-1.5 text-[11px] font-mono-tech text-white" />
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addManualSetRow() {
+      const last = manualSetRows[manualSetRows.length - 1];
+      const nextStart = last ? (parseFloat(last.end) || 0) : 0;
+      const nextEnd = nextStart + 600;
+      const nextNum = manualSetRows.length + 1;
+      manualSetRows.push({ id: Date.now() + nextNum, label: `Set ${nextNum}`, start: nextStart, end: nextEnd });
+      renderManualSets();
+    }
+
+    function removeManualSetRow(idx) {
+      if (manualSetRows.length <= 1) return;
+      manualSetRows.splice(idx, 1);
+      renderManualSets();
+    }
+
+    function updateManualSetField(idx, field, val) {
+      if (!manualSetRows[idx]) return;
+      manualSetRows[idx][field] = val;
+    }
+
+    async function downloadSingleManualSet(idx) {
+      if (!state.audioBuffer) return showToast('Upload file audio di tab Tools dulu!');
+      const row = manualSetRows[idx];
+      if (!row) return;
+      const startSec = Math.max(0, parseFloat(row.start) || 0);
+      const endSec = Math.min(state.audioBuffer.duration, parseFloat(row.end) || 0);
+      if (endSec <= startSec) {
+        return showToast(`Rentang waktu ${row.label} tidak valid!`);
+      }
+
+      const btn = document.getElementById(`manualSetBtn-${idx}`);
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '...';
+      }
+
+      try {
+        await new Promise(r => setTimeout(r, 10));
+        const sliced = sliceAudioBuffer(state.audioBuffer, startSec, endSec);
+        const extMatch = state.fileName.match(/\.([^/.]+)$/);
+        const origExt = extMatch ? extMatch[1].toLowerCase() : 'wav';
+        const { blob: outBlob, ext: finalExt } = await encodeAudioMatchFormat(sliced, origExt);
+        const cleanName = state.fileName.replace(/\.[^/.]+$/, '');
+        const safeLabel = (row.label || `Set_${idx + 1}`).replace(/[^a-zA-Z0-9_-]/g, '_');
+        triggerDownload(outBlob, `${cleanName}_${safeLabel}_${startSec}s-${endSec}s.${finalExt}`);
+        showToast(`${row.label} berhasil diunduh (.${finalExt.toUpperCase()})!`);
+      } catch (e) {
+        console.error(e);
+        showToast(`Gagal memproses ${row.label}.`);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Unduh';
+        }
+      }
+    }
+
+    async function downloadAllManualSets() {
+      if (!state.audioBuffer) return showToast('Upload file audio di tab Tools dulu!');
+      const mainBtn = document.getElementById('downloadManualSetsBtn');
+      mainBtn.disabled = true;
+      try {
+        for (let i = 0; i < manualSetRows.length; i++) {
+          mainBtn.textContent = `Memproses ${manualSetRows[i].label || 'Set ' + (i + 1)}...`;
+          await downloadSingleManualSet(i);
+          await new Promise(r => setTimeout(r, 350));
+        }
+        showToast('Semua set manual selesai diproses!');
+      } finally {
+        mainBtn.disabled = false;
+        mainBtn.textContent = 'Download Semua Set Manual';
       }
     }
 
@@ -1552,10 +1740,141 @@
     function openRoleModal() { document.getElementById('roleModal').classList.remove('hidden'); }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
+    function switchTrimMode(mode) {
+      const isSplit = mode === 'split';
+      document.getElementById('trimPanel-split').classList.toggle('hidden', !isSplit);
+      document.getElementById('trimPanel-manual').classList.toggle('hidden', isSplit);
+      document.getElementById('trimTab-split').className = isSplit
+        ? 'py-2 rounded-lg bg-[#191c24] border border-slate-400/40 text-xs font-bold text-slate-200 transition'
+        : 'py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-slate-200 transition';
+      document.getElementById('trimTab-manual').className = !isSplit
+        ? 'py-2 rounded-lg bg-[#191c24] border border-slate-400/40 text-xs font-bold text-slate-200 transition'
+        : 'py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-slate-200 transition';
+    }
+
+    function setSplitParts(count) {
+      document.getElementById('splitCountInput').value = count;
+      document.querySelectorAll('.split-preset').forEach(btn => {
+        btn.className = 'split-preset bg-[#080c14] border border-slate-800 hover:border-slate-400 rounded-xl py-2 text-xs font-mono-tech font-bold text-slate-200';
+      });
+      const clicked = Array.from(document.querySelectorAll('.split-preset')).find(b => b.textContent.startsWith(count + ' '));
+      if (clicked) {
+        clicked.className = 'split-preset bg-[#1a1d26] border border-slate-300 rounded-xl py-2 text-xs font-mono-tech font-bold text-slate-200';
+      }
+      previewSplitParts();
+    }
+
+    function getSplitSegments() {
+      if (!state.audioBuffer) return [];
+      const totalDur = state.audioBuffer.duration;
+      let count = parseInt(document.getElementById('splitCountInput').value) || 2;
+      count = Math.max(2, Math.min(20, count));
+      const partDur = totalDur / count;
+      const segments = [];
+      for (let i = 0; i < count; i++) {
+        const start = i * partDur;
+        const end = i === count - 1 ? totalDur : (i + 1) * partDur;
+        segments.push({ index: i + 1, start, end });
+      }
+      return segments;
+    }
+
+    function previewSplitParts() {
+      const container = document.getElementById('splitPartsList');
+      if (!state.audioBuffer) {
+        container.innerHTML = `<div class="bg-[#080c14] border border-slate-800/80 rounded-xl p-3 text-center text-[11px] text-slate-500">Upload audio untuk melihat rincian pembagian part.</div>`;
+        return;
+      }
+      const segments = getSplitSegments();
+      container.innerHTML = segments.map(seg => `
+        <div class="bg-[#080c14] border border-slate-800/90 rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
+          <div>
+            <div class="text-xs font-bold text-slate-200">Part ${seg.index} / ${segments.length}</div>
+            <div class="text-[10px] font-mono-tech text-slate-400">${formatTime(seg.start)} → ${formatTime(seg.end)} (${(seg.end - seg.start).toFixed(1)} dtk)</div>
+          </div>
+          <button type="button" id="partBtn-${seg.index}" onclick="downloadSingleSplitPart(${seg.index - 1})" class="bg-slate-200 hover:bg-white text-slate-950 font-bold text-[11px] px-3 py-1.5 rounded-lg transition shrink-0">
+            Download Part ${seg.index}
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function sliceAudioBuffer(buffer, startSec, endSec) {
+      const sampleRate = buffer.sampleRate;
+      const startOffset = Math.floor(startSec * sampleRate);
+      const frameCount = Math.max(1, Math.floor((endSec - startSec) * sampleRate));
+      const channels = buffer.numberOfChannels;
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const newBuffer = ctx.createBuffer(channels, frameCount, sampleRate);
+      for (let ch = 0; ch < channels; ch++) {
+        const origData = buffer.getChannelData(ch);
+        const trimData = newBuffer.getChannelData(ch);
+        trimData.set(origData.subarray(startOffset, startOffset + frameCount));
+      }
+      ctx.close();
+      return newBuffer;
+    }
+
+    async function downloadSingleSplitPart(segIdx) {
+      if (!state.audioBuffer) return showToast('Upload file audio terlebih dahulu!');
+      const segments = getSplitSegments();
+      const seg = segments[segIdx];
+      if (!seg) return;
+
+      const btn = document.getElementById(`partBtn-${seg.index}`);
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Memproses...';
+      }
+
+      try {
+        await new Promise(r => setTimeout(r, 10));
+        const sliced = sliceAudioBuffer(state.audioBuffer, seg.start, seg.end);
+        const extMatch = state.fileName.match(/\.([^/.]+)$/);
+        const origExt = extMatch ? extMatch[1].toLowerCase() : 'wav';
+        const { blob: outBlob, ext: finalExt } = await encodeAudioMatchFormat(sliced, origExt);
+        const cleanName = state.fileName.replace(/\.[^/.]+$/, '');
+        triggerDownload(outBlob, `${cleanName}_PART_${seg.index}of${segments.length}.${finalExt}`);
+        showToast(`Part ${seg.index} dari ${segments.length} berhasil diunduh!`);
+      } catch (e) {
+        console.error(e);
+        showToast(`Gagal memproses Part ${seg.index}.`);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = `Download Part ${seg.index}`;
+        }
+      }
+    }
+
+    async function downloadAllSplitParts() {
+      if (!state.audioBuffer) return showToast('Upload file audio di tab Tools dulu!');
+      const segments = getSplitSegments();
+      const mainBtn = document.getElementById('downloadAllPartsBtn');
+      mainBtn.disabled = true;
+
+      try {
+        for (let i = 0; i < segments.length; i++) {
+          mainBtn.textContent = `Memproses Part ${i + 1} dari ${segments.length}...`;
+          await downloadSingleSplitPart(i);
+          await new Promise(r => setTimeout(r, 350));
+        }
+        showToast(`Selesai! Semua ${segments.length} bagian audio berhasil diunduh.`);
+      } finally {
+        mainBtn.disabled = false;
+        mainBtn.textContent = 'Download Semua Bagian Sekaligus';
+      }
+    }
+
     function formatTime(sec) {
       if (!sec || isNaN(sec)) return '0:00';
-      const m = Math.floor(sec / 60);
-      const s = Math.floor(sec % 60);
+      const total = Math.floor(sec);
+      const h = Math.floor(total / 3600);
+      const m = Math.floor((total % 3600) / 60);
+      const s = total % 60;
+      if (h > 0) {
+        return `${h}:${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+      }
       return `${m}:${s < 10 ? '0' : ''}${s}`;
     }
   </script>
