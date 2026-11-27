@@ -561,7 +561,44 @@
           <span class="text-[10px] font-mono-tech text-emerald-400">SUPPORT DURASI 1 JAM+</span>
         </div>
 
-        <p class="text-xs text-slate-400">Upload file audio (termasuk set DJ panjang 1 jam) di tab <strong>Tools</strong>, lalu pilih potong manual atau bagi otomatis menjadi beberapa bagian.</p>
+        <p class="text-xs text-slate-400">Pilih file audio (termasuk set DJ panjang 1 jam) atau tempel link <strong class="text-slate-200">SoundCloud, YouTube, Spotify</strong>, maupun link audio langsung di bawah ini.</p>
+
+        <!-- SUMBER FILE & LINK DI TAB POTONG -->
+        <div class="bg-[#080c14] border border-slate-800/90 rounded-xl p-3 space-y-2.5">
+          <div class="grid grid-cols-2 bg-[#0c111b] border border-slate-800 rounded-xl p-1">
+            <button type="button" onclick="switchTrimSource('file')" id="trimSrc-file" class="py-1.5 rounded-lg bg-[#191c24] border border-slate-400/40 text-[11px] font-bold text-slate-200 transition">Upload File</button>
+            <button type="button" onclick="switchTrimSource('link')" id="trimSrc-link" class="py-1.5 rounded-lg text-[11px] font-bold text-slate-400 hover:text-slate-200 transition">Link SC / YT / Spotify</button>
+          </div>
+
+          <div id="trimSource-file-box">
+            <label for="trimAudioFileInput" class="border border-dashed border-slate-700 hover:border-slate-400 bg-[#0c111b] rounded-xl py-3 px-3 flex items-center justify-between cursor-pointer transition">
+              <span id="trimUploadLabel" class="text-[11px] font-bold text-slate-200 truncate">Pilih file MP3 / WAV / OGG...</span>
+              <span class="text-[10px] font-mono-tech bg-slate-800 text-slate-300 px-2 py-1 rounded-lg shrink-0">Browse</span>
+              <input type="file" id="trimAudioFileInput" accept="audio/*" class="hidden" onchange="handleTrimFileUpload(event)" />
+            </label>
+          </div>
+
+          <div id="trimSource-link-box" class="hidden space-y-2">
+            <div class="flex gap-2">
+              <input type="url" id="trimAudioUrlInput" placeholder="Tempel link SoundCloud, YouTube, Spotify, atau .mp3..." class="flex-1 bg-[#0c111b] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-slate-300" />
+              <button type="button" onclick="loadAudioFromTrimUrl()" class="bg-slate-200 hover:bg-white text-slate-950 px-3.5 rounded-xl text-xs font-extrabold transition shrink-0">Muat</button>
+            </div>
+            <div id="externalPlatformCard" class="hidden bg-[#0c111b] border border-amber-500/30 rounded-xl p-2.5 space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <span id="externalPlatformBadge" class="text-[10px] font-mono-tech font-bold px-2 py-0.5 rounded bg-amber-500/15 text-amber-300">PLATFORM LINK</span>
+                <span id="externalPlatformTitle" class="text-[11px] font-bold text-slate-200 truncate">Track Eksternal</span>
+              </div>
+              <p id="externalPlatformNote" class="text-[10px] text-slate-400 leading-relaxed"></p>
+              <div class="flex items-center gap-2">
+                <a id="externalOpenBtn" href="#" target="_blank" rel="noopener noreferrer" class="bg-[#191c24] hover:bg-[#222631] border border-slate-600 text-slate-200 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition">Buka Link</a>
+                <label for="trimAudioFileInput" class="bg-slate-200 hover:bg-white text-slate-950 text-[10px] font-extrabold px-2.5 py-1.5 rounded-lg cursor-pointer transition">Upload Audio Hasil Download</label>
+              </div>
+            </div>
+            <p class="text-[10px] text-slate-500 leading-relaxed">
+              *Link direct audio (<code>.mp3</code>/<code>.wav</code>) bisa langsung didekode. Untuk link SoundCloud, YouTube, atau Spotify, sistem mendeteksi platform dan menyediakan tautan cepat + tombol upload file audionya untuk di-split/trim.
+            </p>
+          </div>
+        </div>
 
         <div class="bg-[#080c14] border border-slate-800 rounded-xl p-3 space-y-1">
           <div class="flex items-center justify-between">
@@ -1168,20 +1205,118 @@
       }
     }
 
-    async function loadAudioFromUrl() {
-      const url = document.getElementById('audioUrlInput').value.trim();
-      if (!url) return showToast('Masukkan link audio terlebih dahulu.');
+    function detectExternalPlatform(url) {
+      const lower = url.toLowerCase();
+      if (lower.includes('soundcloud.com') || lower.includes('snd.sc')) {
+        return { name: 'SOUNDCLOUD', badgeClass: 'bg-orange-500/20 text-orange-300 border border-orange-500/30', label: 'SoundCloud Track' };
+      }
+      if (lower.includes('youtube.com') || lower.includes('youtu.be')) {
+        return { name: 'YOUTUBE', badgeClass: 'bg-rose-500/20 text-rose-300 border border-rose-500/30', label: 'YouTube Audio/Video' };
+      }
+      if (lower.includes('open.spotify.com') || lower.includes('spotify.com')) {
+        return { name: 'SPOTIFY', badgeClass: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30', label: 'Spotify Track' };
+      }
+      return null;
+    }
+
+    async function applyDecodedAudioBuffer(arrayBuffer, fileLabel) {
+      if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      state.audioBuffer = await state.audioCtx.decodeAudioData(arrayBuffer);
+      state.fileName = fileLabel;
+
+      const dur = state.audioBuffer.duration;
+      document.getElementById('uploadFileName').textContent = fileLabel;
+      document.getElementById('trimUploadLabel').textContent = fileLabel;
+      document.getElementById('previewTitle').textContent = fileLabel;
+      document.getElementById('previewTitle').className = 'text-xs font-bold text-white truncate';
+      document.getElementById('trimFileName').textContent = fileLabel;
+      document.getElementById('durationTimeText').textContent = formatTime(dur);
+      document.getElementById('trimEndInput').value = Math.min(15, dur).toFixed(1);
+      document.getElementById('trimTotalDuration').textContent = `${formatTime(dur)} (${dur.toFixed(1)} detik)`;
+      document.getElementById('previewSubtitle').textContent = `Durasi Asli: ${formatTime(dur)} · Siap Diproses`;
+
+      const playBtn = document.getElementById('playPauseBtn');
+      playBtn.disabled = false;
+      playBtn.className = 'w-10 h-10 rounded-full bg-slate-200 hover:bg-white text-slate-950 flex items-center justify-center transition shadow-lg';
+      document.getElementById('seekSlider').disabled = false;
+
+      previewSplitParts();
+    }
+
+    async function handleTrimFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      stopPreview();
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        await applyDecodedAudioBuffer(arrayBuffer, file.name);
+        showToast('File audio berhasil dimuat untuk dipotong!');
+      } catch (err) {
+        showToast('Gagal membaca file audio. Pastikan format didukung.');
+      }
+    }
+
+    function switchTrimSource(src) {
+      const isFile = src === 'file';
+      document.getElementById('trimSource-file-box').classList.toggle('hidden', !isFile);
+      document.getElementById('trimSource-link-box').classList.toggle('hidden', isFile);
+      document.getElementById('trimSrc-file').className = isFile
+        ? 'py-1.5 rounded-lg bg-[#191c24] border border-slate-400/40 text-[11px] font-bold text-slate-200 transition'
+        : 'py-1.5 rounded-lg text-[11px] font-bold text-slate-400 hover:text-slate-200 transition';
+      document.getElementById('trimSrc-link').className = !isFile
+        ? 'py-1.5 rounded-lg bg-[#191c24] border border-slate-400/40 text-[11px] font-bold text-slate-200 transition'
+        : 'py-1.5 rounded-lg text-[11px] font-bold text-slate-400 hover:text-slate-200 transition';
+    }
+
+    function handlePlatformLinkCard(url, targetCardId, badgeId, titleId, noteId, openBtnId) {
+      const info = detectExternalPlatform(url);
+      if (!info) return false;
+      const card = document.getElementById(targetCardId);
+      if (!card) return true;
+      card.classList.remove('hidden');
+      document.getElementById(badgeId).textContent = info.name;
+      document.getElementById(badgeId).className = `text-[10px] font-mono-tech font-bold px-2 py-0.5 rounded ${info.badgeClass}`;
+      document.getElementById(titleId).textContent = info.label;
+      document.getElementById(noteId).textContent = `Streaming ${info.name} tidak menyediakan stream audio mentah langsung ke browser karena proteksi DRM/CORS. Buka tautan untuk memutar/mengunduh file audionya, lalu pilih "Upload Audio Hasil Download" di samping.`;
+      const openBtn = document.getElementById(openBtnId);
+      if (openBtn) openBtn.href = url;
+      showToast(`Link ${info.name} terdeteksi!`);
+      return true;
+    }
+
+    async function loadAudioFromTrimUrl() {
+      const url = document.getElementById('trimAudioUrlInput').value.trim();
+      if (!url) return showToast('Masukkan link SoundCloud, YouTube, Spotify, atau audio dulu.');
+      if (handlePlatformLinkCard(url, 'externalPlatformCard', 'externalPlatformBadge', 'externalPlatformTitle', 'externalPlatformNote', 'externalOpenBtn')) {
+        return;
+      }
       showToast('Mengunduh audio dari link...');
       try {
         const res = await fetch(url);
         const arrayBuffer = await res.arrayBuffer();
-        if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        state.audioBuffer = await state.audioCtx.decodeAudioData(arrayBuffer);
-        state.fileName = url.split('/').pop().split('?')[0] || 'audio_link.mp3';
-        document.getElementById('previewTitle').textContent = state.fileName;
-        document.getElementById('trimFileName').textContent = state.fileName;
-        document.getElementById('playPauseBtn').disabled = false;
-        document.getElementById('playPauseBtn').className = 'w-10 h-10 rounded-full bg-slate-200 text-slate-950 flex items-center justify-center';
+        const inferredName = url.split('/').pop().split('?')[0] || 'audio_link.mp3';
+        await applyDecodedAudioBuffer(arrayBuffer, inferredName);
+        showToast('Audio dari link berhasil dimuat!');
+      } catch (e) {
+        showToast('Link tidak bisa diakses langsung (CORS/proteksi). Gunakan Upload File.');
+      }
+    }
+
+    async function loadAudioFromUrl() {
+      const url = document.getElementById('audioUrlInput').value.trim();
+      if (!url) return showToast('Masukkan link audio terlebih dahulu.');
+      const platform = detectExternalPlatform(url);
+      if (platform) {
+        showToast(`Link ${platform.name} terdeteksi! Buka link atau upload file audio hasil unduhan untuk diproses.`);
+        window.open(url, '_blank');
+        return;
+      }
+      showToast('Mengunduh audio dari link...');
+      try {
+        const res = await fetch(url);
+        const arrayBuffer = await res.arrayBuffer();
+        const inferredName = url.split('/').pop().split('?')[0] || 'audio_link.mp3';
+        await applyDecodedAudioBuffer(arrayBuffer, inferredName);
         showToast('Audio dari link berhasil dimuat!');
       } catch (e) {
         showToast('Link diblokir CORS oleh server sumber. Gunakan Upload File.');
