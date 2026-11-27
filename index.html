@@ -611,6 +611,22 @@
           </div>
         </div>
 
+        <!-- OPSI AUTO BYPASS SAAT POTONG -->
+        <div class="bg-[#080c14] border border-amber-500/30 rounded-xl p-3 flex items-center justify-between gap-3">
+          <div>
+            <div class="text-xs font-extrabold text-amber-300 flex items-center gap-1.5">
+              <span>⚡ Auto Bypass Hasil Potongan</span>
+            </div>
+            <div id="trimBypassSpecLabel" class="text-[10px] font-mono-tech text-emerald-400 mt-0.5">
+              Aktif · Ikuti Tools: 3.0x · -6 dB (IG 0.3333)
+            </div>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer shrink-0">
+            <input type="checkbox" id="autoBypassOnTrimToggle" checked onchange="updateTrimBypassLabel()" class="sr-only peer" />
+            <div class="w-10 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+          </label>
+        </div>
+
         <!-- MODE POTONG TABS -->
         <div class="grid grid-cols-2 bg-[#080c14] border border-slate-800 rounded-xl p-1">
           <button type="button" onclick="switchTrimMode('split')" id="trimTab-split" class="py-2 rounded-lg bg-[#191c24] border border-slate-400/40 text-xs font-bold text-slate-200 transition">Bagi Jadi Beberapa Part</button>
@@ -1164,6 +1180,50 @@
       if (state.isPlaying && state.sourceNode) {
         state.sourceNode.playbackRate.value = speed;
       }
+      updateTrimBypassLabel();
+    }
+
+    function updateTrimBypassLabel() {
+      const lbl = document.getElementById('trimBypassSpecLabel');
+      const toggle = document.getElementById('autoBypassOnTrimToggle');
+      if (!lbl) return;
+      const isOn = toggle ? toggle.checked : true;
+      if (isOn) {
+        const ig = (1 / state.speed).toFixed(4);
+        lbl.textContent = `Aktif · Ikuti Tools: ${state.speed.toFixed(1)}x · ${state.db} dB (IG ${ig})`;
+        lbl.className = 'text-[10px] font-mono-tech text-emerald-400 mt-0.5';
+      } else {
+        lbl.textContent = 'Nonaktif · Potong durasi asli (1.0x · 0 dB)';
+        lbl.className = 'text-[10px] font-mono-tech text-slate-400 mt-0.5';
+      }
+    }
+
+    async function applyBypassToAudioBuffer(buffer) {
+      const toggle = document.getElementById('autoBypassOnTrimToggle');
+      if (!toggle || !toggle.checked) {
+        return { buffer, bypassed: false };
+      }
+      const speed = state.speed;
+      const gainLinear = Math.pow(10, state.db / 20);
+      const newLength = Math.max(1, Math.ceil(buffer.length / speed));
+      const offlineCtx = new OfflineAudioContext(
+        buffer.numberOfChannels,
+        newLength,
+        buffer.sampleRate
+      );
+      const source = offlineCtx.createBufferSource();
+      source.buffer = buffer;
+      source.playbackRate.value = speed;
+
+      const gainNode = offlineCtx.createGain();
+      gainNode.gain.value = gainLinear;
+
+      source.connect(gainNode);
+      gainNode.connect(offlineCtx.destination);
+      source.start(0);
+
+      const rendered = await offlineCtx.startRendering();
+      return { buffer: rendered, bypassed: true };
     }
 
     function copyInGameValue() {
@@ -1541,13 +1601,17 @@
       try {
         await new Promise(r => setTimeout(r, 10));
         const sliced = sliceAudioBuffer(state.audioBuffer, startSec, endSec);
+        const { buffer: finalBuf, bypassed } = await applyBypassToAudioBuffer(sliced);
         const extMatch = state.fileName.match(/\.([^/.]+)$/);
         const origExt = extMatch ? extMatch[1].toLowerCase() : 'wav';
-        const { blob: outBlob, ext: finalExt } = await encodeAudioMatchFormat(sliced, origExt);
+        const { blob: outBlob, ext: finalExt } = await encodeAudioMatchFormat(finalBuf, origExt);
         const cleanName = state.fileName.replace(/\.[^/.]+$/, '');
         const safeLabel = (row.label || `Set_${idx + 1}`).replace(/[^a-zA-Z0-9_-]/g, '_');
-        triggerDownload(outBlob, `${cleanName}_${safeLabel}_${startSec}s-${endSec}s.${finalExt}`);
-        showToast(`${row.label} berhasil diunduh (.${finalExt.toUpperCase()})!`);
+        const suffix = bypassed ? `_BYPASS_${state.speed}x_${state.db}dB` : '';
+        const outFileName = `${cleanName}_${safeLabel}_${startSec}s-${endSec}s${suffix}.${finalExt}`;
+        triggerDownload(outBlob, outFileName);
+        if (bypassed) addToHistory(outFileName, state.speed, state.db);
+        showToast(`${row.label}${bypassed ? ' + Bypass ' + state.speed + 'x' : ''} berhasil diunduh!`);
       } catch (e) {
         console.error(e);
         showToast(`Gagal memproses ${row.label}.`);
@@ -1601,12 +1665,16 @@
         }
       }
 
+      const { buffer: finalBuf, bypassed } = await applyBypassToAudioBuffer(newBuffer);
       const extMatch = state.fileName.match(/\.([^/.]+)$/);
       const origExt = extMatch ? extMatch[1].toLowerCase() : 'wav';
-      const { blob: outBlob, ext: finalExt } = await encodeAudioMatchFormat(newBuffer, origExt);
+      const { blob: outBlob, ext: finalExt } = await encodeAudioMatchFormat(finalBuf, origExt);
       const cleanName = state.fileName.replace(/\.[^/.]+$/, '');
-      triggerDownload(outBlob, `${cleanName}_TRIM_${startSec}s-${endSec}s.${finalExt}`);
-      showToast(`Audio berhasil dipotong & diunduh (.${finalExt.toUpperCase()})!`);
+      const suffix = bypassed ? `_BYPASS_${state.speed}x_${state.db}dB` : '';
+      const outFileName = `${cleanName}_TRIM_${startSec}s-${endSec}s${suffix}.${finalExt}`;
+      triggerDownload(outBlob, outFileName);
+      if (bypassed) addToHistory(outFileName, state.speed, state.db);
+      showToast(`Audio berhasil dipotong${bypassed ? ' & dibypass ' + state.speed + 'x' : ''} (.${finalExt.toUpperCase()})!`);
     }
 
     async function encodeAudioMatchFormat(buffer, origExt) {
@@ -1965,12 +2033,16 @@
       try {
         await new Promise(r => setTimeout(r, 10));
         const sliced = sliceAudioBuffer(state.audioBuffer, seg.start, seg.end);
+        const { buffer: finalBuf, bypassed } = await applyBypassToAudioBuffer(sliced);
         const extMatch = state.fileName.match(/\.([^/.]+)$/);
         const origExt = extMatch ? extMatch[1].toLowerCase() : 'wav';
-        const { blob: outBlob, ext: finalExt } = await encodeAudioMatchFormat(sliced, origExt);
+        const { blob: outBlob, ext: finalExt } = await encodeAudioMatchFormat(finalBuf, origExt);
         const cleanName = state.fileName.replace(/\.[^/.]+$/, '');
-        triggerDownload(outBlob, `${cleanName}_PART_${seg.index}of${segments.length}.${finalExt}`);
-        showToast(`Part ${seg.index} dari ${segments.length} berhasil diunduh!`);
+        const suffix = bypassed ? `_BYPASS_${state.speed}x_${state.db}dB` : '';
+        const outFileName = `${cleanName}_PART_${seg.index}of${segments.length}${suffix}.${finalExt}`;
+        triggerDownload(outBlob, outFileName);
+        if (bypassed) addToHistory(outFileName, state.speed, state.db);
+        showToast(`Part ${seg.index}/${segments.length}${bypassed ? ' + Bypass ' + state.speed + 'x' : ''} berhasil diunduh!`);
       } catch (e) {
         console.error(e);
         showToast(`Gagal memproses Part ${seg.index}.`);
